@@ -20,7 +20,7 @@
 
         var i, l,
             F  = function() {},
-            properties = args.properties,
+            prototype = args.prototype,
             extend = forceArray(args.extend),
             mixin = forceArray(args.mixin),
             init = args.init || function() {},
@@ -52,7 +52,7 @@
             }
         }
 
-        extendObj(F.prototype, properties);
+        extendObj(F.prototype, prototype);
 
         return {
             object: F,

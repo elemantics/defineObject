@@ -56,8 +56,8 @@ describe("defineObject", function() {
 	    	expect(B.hadCreated(a)).toBe(false);
 		});
 
-		it("has the passed in properties as part of its prototype", function() {
-			var O = defineObject({properties : { prop: 'value'}});
+		it("has the passed in prototype as part of its prototype", function() {
+			var O = defineObject({prototype : { prop: 'value'}});
 			var o = O.create();
 			expect(o.prop).toEqual('value');
 		});
@@ -125,7 +125,7 @@ describe("defineObject", function() {
 	describe("when mixing in other objects", function() {
 		it("extends the objects prototype with the mixed in objects", function() {
 			var M = defineObject({ 
-				properties: {
+				prototype: {
 					value : true
 				}
 			});
@@ -155,14 +155,14 @@ describe("defineObject", function() {
 
 		it("mixes in the objects in order if an array is provided ", function() {
 			var M = defineObject({ 
-				properties : {
+				prototype : {
 					one: 0,
 					two: 2
 				}
 			});
 
 			var M2 = defineObject({ 
-				properties : {
+				prototype : {
 					one : 1,
 					three: 3
 				}

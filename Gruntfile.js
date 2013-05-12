@@ -10,12 +10,12 @@ module.exports = function(grunt) {
       },
       dist: {
         files: {
-          '<%= pkg.name %>.min.js': ['<%= pkg.name %>.js']
+          'defineObject.min.js': ['defineObject.js']
         }
       }
     },
     jshint: {
-      files: ['<%= pkg.name %>.js'],
+      files: ['defineObject.js'],
       options: {
           boss: true,
           eqnull: true,
@@ -32,9 +32,9 @@ module.exports = function(grunt) {
     },
     jasmine: {
       kettle : {
-       src: ['<%= pkg.name %>.js'],
+       src: ['defineObject.js'],
         options: {
-          specs: ['test/<%= pkg.name %>.js']
+          specs: ['test/defineObject.js']
         }
       }
     },
