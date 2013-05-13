@@ -21,6 +21,7 @@
         var i, l,
             F  = function() {},
             prototype = args.prototype,
+            properties = args.properties,
             extend = forceArray(args.extend),
             mixin = forceArray(args.mixin),
             init = args.init || function() {},
@@ -60,8 +61,14 @@
             prototype: F.prototype,
             parent : parent,
             parentProto : parent ? parent.prototype : null,
+            properties : properties,
             create: function() {
                 var f = new this.object();
+
+                if (this.properties) {
+                    Object.defineProperties(f, properties);
+                }
+
                 this.init.apply(f,arguments);
 
                 if (mixin) {

@@ -61,6 +61,19 @@ describe("defineObject", function() {
 			var o = O.create();
 			expect(o.prop).toEqual('value');
 		});
+
+		it("creates properties with Object.defineProperties", function() {
+			var O = defineObject({
+				properties : {
+					prop : {
+						value : 'value'
+					}
+				}
+			});
+
+			var o = O.create();
+			expect(o.prop).toEqual('value');
+		});
 	});
 
 	describe("when inheriting from a parent", function() {
