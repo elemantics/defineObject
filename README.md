@@ -11,7 +11,7 @@ Why
 * Guarantees a side-effect free constructor for painless inheritance.
 * Provides a simple mechanism for mixins.
 * Provides a consistent structure for extension, mixins and inheritance.
-* Avoids the 'new' keyword when create new object instances.
+* Avoids the 'new' keyword when create new object instances. [ES3]
 
 Why not?
 ------------
@@ -54,11 +54,16 @@ Usage
   var Dog = defineObject({
     init : function(weight) {
       this.weight = weight;
+      //Animal.init.call(this); -- if you need to have access to the Animal initialization method
     },
     parent : Animal, //inherits from Animal
     mixin : Logger , //alternatively an array may be passed for multiple mixins ie [Logger, Events]
     prototype : {
       sound : 'woof',
+      vocalize : function() {
+        Animal.prototype.vocalize.call(this); // Calling 'super' methods remains about the same.
+        this.log("dog is vocalizing");
+      },
       drool: function() {
         console.log("I want what you're having.");
         this.log("dog is drooling")
