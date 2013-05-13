@@ -77,5 +77,31 @@ Usage
   console.log("History", dog.logHistory);
 
   console.log( Dog.hadCreated(dog) ); //A instanceof check
-
+  
+  
 ```
+
+[ES5 ONLY] Properties
+--------------------
+
+Including a 'properties' field will simply pass the assigned literal to Object.defineProperties upon the creation of an object.
+
+See: https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Object/defineProperties
+
+```javascript
+  
+  var O = defineObject({
+    properties : {
+      field : {
+        value : 'value',
+        writable : false
+      }
+    }
+  });
+  
+  var o = O.create();
+  console.log(o.field);
+  o.field = 'error'; //error
+  
+```
+
