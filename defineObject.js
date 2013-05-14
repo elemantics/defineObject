@@ -37,7 +37,7 @@
             parent = args.parent;
 
         F = function() {
-            var f = this instanceof F ? this : objectCreate(F.prototype);
+            var f = !this || this === root ? objectCreate(F.prototype) : this;
 
             if (F.properties) {
                 Object.defineProperties(f, F.properties);
@@ -47,7 +47,7 @@
 
             if (F.mixin) {
                 for (i = 0, l = F.mixin.length; i < l; i++) {
-                    F.mixin[i].init.call(f);
+                    F.mixin[i].call(f);
                 }
             }
 
@@ -66,7 +66,7 @@
 
         if (mixin) {
             for (i = 0, l = mixin.length; i < l; i++) {
-                if (typeof mixin[i].prototype === 'object' && typeof mixin[i].init === 'function') {
+                if (typeof mixin[i] === 'function') {
                     extendObj(F.prototype, mixin[i].prototype);
                 } else {
                     throw "defineObject : not a valid mixin";
@@ -80,7 +80,7 @@
         F.mixin = mixin;
         F.properties = properties;
         F.create = function() {
-            var f = F.apply(null,arguments);
+            var f = F.apply(root,arguments);
             return f;
         };
 
