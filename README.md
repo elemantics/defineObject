@@ -71,12 +71,12 @@ Usage
     }
   });
 
-  var dog = Dog.create(80);
+  var dog = Dog.create(80); //Alternatively 'new Dog(80)' or 'Dog(80)'
   dog.vocalize();
   dog.drool();
   console.log("History", dog.logHistory);
 
-  console.log( Dog.hadCreated(dog) ); //A instanceof check
+  console.log( dog instanceof Dog );
   
   
 ```

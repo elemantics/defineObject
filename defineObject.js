@@ -3,6 +3,16 @@
 
     var root = this;
 
+    var objectCreate = ( Object.create ||  function(o) {
+        function F() {}
+        F.prototype = o;
+        return new F();
+    });
+
+    var isArray = ( Array.isArray || function(vArg) {
+        return Object.prototype.toString.call(vArg) === "[object Array]";
+    });
+
     function extendObj(to,from) {
         for (var prop in from) { 
             if (from.hasOwnProperty(prop)) {
@@ -12,14 +22,13 @@
     }
 
     function forceArray(data) {
-        return !data || typeof(data) === 'object' && data.push ? data : [data];
+        return !data || isArray(data) ? data : [data];
     }
    
     function defineObject(args) {
         args = args || {};
 
-        var i, l,
-            F  = function() {},
+        var i, l, F,
             prototype = args.prototype,
             properties = args.properties,
             extend = forceArray(args.extend),
@@ -27,19 +36,31 @@
             init = args.init || function() {},
             parent = args.parent;
 
-        if (parent) {
-            if (typeof parent.object === 'function' && typeof parent.init === 'function') {
-                F.prototype = new parent.object();
-            } else if (typeof parent === 'function') {
-                F.prototype = new parent();
-            } else {
-                throw "defineObject: not a valid parent";
+        F = function() {
+            var f = this instanceof F ? this : objectCreate(F.prototype);
+
+            if (F.properties) {
+                Object.defineProperties(f, F.properties);
             }
+
+            F.init.apply(f,arguments);
+
+            if (F.mixin) {
+                for (i = 0, l = F.mixin.length; i < l; i++) {
+                    F.mixin[i].init.call(f);
+                }
+            }
+
+            return f;
+        };
+
+        if (parent) {
+            F.prototype = objectCreate(parent.prototype);
         }
 
         if (extend) {
             for (i=0,l=extend.length; i < l; i++) {
-                extendObj(F.prototype, typeof extend[i].prototype === 'object' ? extend[i].prototype : extend[i]);
+                extendObj(F.prototype,  extend[i]);
             }
         }
 
@@ -55,34 +76,21 @@
 
         extendObj(F.prototype, prototype);
 
-        return {
-            object: F,
-            init: init,
-            prototype: F.prototype,
-            parent : parent,
-            parentProto : parent ? parent.prototype : null,
-            properties : properties,
-            create: function() {
-                var f = new this.object();
-
-                if (this.properties) {
-                    Object.defineProperties(f, properties);
-                }
-
-                this.init.apply(f,arguments);
-
-                if (mixin) {
-                    for (i = 0, l = mixin.length; i < l; i++) {
-                        mixin[i].init.call(f);
-                    }
-                }
-
-                return f;
-            },
-            hadCreated: function(obj) {
-                return obj instanceof this.object;
-            }
+        F.init = init;
+        F.mixin = mixin;
+        F.properties = properties;
+        F.create = function() {
+            var f = F.apply(null,arguments);
+            return f;
         };
+
+        if (parent) {
+            F.parent = parent;
+            F.parentProto = parent.prototype;
+        }
+
+        return F;
+
     }
 
     if (typeof exports !== 'undefined') {

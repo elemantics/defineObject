@@ -11,11 +11,6 @@ describe("defineObject", function() {
 
 	describe("when defining an object", function() {
 
-	    it("provide access to the constructor", function() {
-	    	expect(typeof A.object).toBe('function');
-	    	expect(a.constructor).toBe(A.object);
-	    });
-
 	    it("provide access to the prototype", function() {
 	    	expect(typeof A.prototype).toBe('object');
 	    	expect(a.__proto__).toBe(A.prototype);
@@ -30,6 +25,43 @@ describe("defineObject", function() {
 	describe("when creating an object", function() {
 		it("create an empty object", function() {
 	    	expect(A.create()).toEqual({}); 
+	    });
+
+	    it("creates an object with create function", function() {
+			var O = defineObject({
+	    		prototype : {
+	    			prop : 'value'
+	    		}
+	    	});
+
+	    	var o = O.create();
+	    	expect(o instanceof O).toBe(true);
+	    	expect(o.prop).toBe('value');
+
+	    });
+
+	    it("creates an object with new", function() {
+	    	var O = defineObject({
+	    		prototype : {
+	    			prop : 'value'
+	    		}
+	    	});
+
+	    	var o = new O();
+	    	expect(o instanceof O).toBe(true);
+	    	expect(o.prop).toBe('value');
+	    });
+
+	    it("creates an object without new", function() {
+	    	var O = defineObject({
+	    		prototype : {
+	    			prop : 'value'
+	    		}
+	    	});
+
+	    	var o = O();
+	    	expect(o instanceof O).toBe(true);
+	    	expect(o.prop).toBe('value');
 	    });
 
 		it("call the initialization method, forwarding parameters", function() {
@@ -52,8 +84,8 @@ describe("defineObject", function() {
 		});
 
 		it("is able to identify constructor object", function() {
-		 	expect(A.hadCreated(a)).toBe(true);
-	    	expect(B.hadCreated(a)).toBe(false);
+		 	expect(a instanceof A).toBe(true);
+	    	expect(a instanceof B).toBe(false);
 		});
 
 		it("has the passed in prototype as part of its prototype", function() {
@@ -82,6 +114,20 @@ describe("defineObject", function() {
 			expect(B.prototype.__proto__).toEqual(A.prototype);
 		});
 
+		it("inherits from normal constructor", function() {
+			var F = function() {};
+			F.prototype.prop = 'value';
+
+			var O = defineObject({
+				parent: F
+			});
+
+			var o = O.create();
+
+			expect(o.prop).toBe('value');
+			expect(o instanceof F).toBe(true);
+		});
+
 		it("provides access to the parent", function() {
 	    	expect(B.parent).toBe(A);
 	    });
@@ -107,25 +153,13 @@ describe("defineObject", function() {
 			expect(c.value).toBe(true);
 		});
 
-		it("extends the objects prototype field if it is found instead", function() {
-			var o = function() {};
-			o.prototype.value = true;
-
-			var C = defineObject({
-				extend : o
-			});
-
-			var c = C.create();
-			expect(c.value).toBe(true);
-		});
-
 		it("extends the objects in order if an array is provided ", function() {
 			var o = function() {};
 			o.prototype.one = 0;
 			o.prototype.two = 2;
 
 			var C = defineObject({
-				extend : [o, { one: 1, three: 3 }]
+				extend : [o.prototype, { one: 1, three: 3 }]
 			});
 
 			var c = C.create();
