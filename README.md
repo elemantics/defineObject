@@ -54,14 +54,14 @@ Usage
   var Dog = defineObject({
     init : function(weight) {
       this.weight = weight;
-      //Animal.init.call(this); -- if you need to have access to the Animal initialization method
+      //Dog.parent.init.call(this); -- if you need to have access to the Animal initialization method
     },
     parent : Animal, //inherits from Animal
     mixin : Logger , //alternatively an array may be passed for multiple mixins ie [Logger, Events]
     prototype : {
       sound : 'woof',
       vocalize : function() {
-        Animal.prototype.vocalize.call(this); // Calling 'super' methods remains about the same.
+        Dog.parentProto.vocalize.call(this); // Calling 'super' methods remains about the same.
         this.log("dog is vocalizing");
       },
       drool: function() {
