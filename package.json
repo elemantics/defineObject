@@ -3,10 +3,35 @@
   "version": "0.1.1",
   "devDependencies": {
     "grunt": "~0.4.0",
-    "grunt-cli" : "~0.1.8",
+    "grunt-cli": "~0.1.8",
     "grunt-contrib-uglify": "~0.1.1",
     "grunt-contrib-jshint": "~0.1.1",
     "grunt-contrib-jasmine": "~0.3.3",
     "grunt-contrib-watch": "~0.2.0"
-  }
+  },
+  "readmeFilename": "README.md",
+  "description": "A bit of sugar for defining Objects and their prototypes.",
+  "main": "defineObject.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {},
+  "scripts": {
+    "test": "grunt jasmine"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/smelnikov/defineObject.git"
+  },
+  "keywords": [
+    "objects",
+    "prototypes",
+    "micro",
+    "tiny",
+    "util",
+    "client",
+    "browser"
+  ],
+  "author": "Sergey Melnikov",
+  "license": "MIT"
 }

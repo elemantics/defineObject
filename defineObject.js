@@ -1,3 +1,8 @@
+// defineObject-js v0.1.1 
+// (c) 2013 Sergey Melnikov 
+
+// defineObject-js may be freely distributed under the MIT license
+
 (function () {
     "use strict";
 
