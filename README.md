@@ -133,7 +133,7 @@ console.log(O.staticProp)
 
 ```
 
-Note: defineOjbect will not allow you to redifine exsisting static properties, an exception will be thrown. 
+Note: defineOjbect will not allow you to redefine existing static properties, an exception will be thrown. 
 
 
 [ES5 ONLY] Properties
@@ -163,7 +163,7 @@ See: https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Object
 Chainable style
 ---------------
 
-If preffered, objects can be defined in a fully chainable style as well: 
+Objects can be defined in a more chainable style as well: 
 
 ```javascript
   Dog = Animal.extend()
