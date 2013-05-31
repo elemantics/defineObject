@@ -4,7 +4,7 @@ describe("defineObject", function() {
 	beforeEach(function() {
 		fn = function() {};
 		A = defineObject();
-		B = defineObject({parent: A});
+		B = A.extend();
 		a = A.create();
 	});
 
@@ -20,6 +20,20 @@ describe("defineObject", function() {
 	    	var C = defineObject({init: fn});
 	    	expect(C.init).toEqual(fn);
 	    });
+
+	    it("creates static methods on the object", function() {
+	    	var C = defineObject({},{
+	    		prop : 'value'
+	    	});
+
+	    	expect(C.prop).toEqual('value');
+	    });
+
+	    it("prevents static methods redifining existing methods", function() {
+	    	expect(function() {
+	    		defineObject({},{init: 'error'});
+	    	}).toThrow();
+	    });
 	});
 
 	describe("when creating an object", function() {
@@ -29,9 +43,8 @@ describe("defineObject", function() {
 
 	    it("creates an object with create function", function() {
 			var O = defineObject({
-	    		prototype : {
-	    			prop : 'value'
-	    		}
+	    		prop : 'value'
+	    		
 	    	});
 
 	    	var o = O.create();
@@ -42,9 +55,7 @@ describe("defineObject", function() {
 
 	    it("creates an object with new", function() {
 	    	var O = defineObject({
-	    		prototype : {
-	    			prop : 'value'
-	    		}
+	    		prop : 'value'
 	    	});
 
 	    	var o = new O();
@@ -54,9 +65,7 @@ describe("defineObject", function() {
 
 	    it("creates an object without new", function() {
 	    	var O = defineObject({
-	    		prototype : {
-	    			prop : 'value'
-	    		}
+	    		prop : 'value'
 	    	});
 
 	    	var o = O();
@@ -89,22 +98,75 @@ describe("defineObject", function() {
 		});
 
 		it("has the passed in prototype as part of its prototype", function() {
-			var O = defineObject({prototype : { prop: 'value'}});
+			var O = defineObject({prop: 'value'});
 			var o = O.create();
 			expect(o.prop).toEqual('value');
 		});
 
+		
+	});
+
+	describe("when defining properties", function() {
 		it("creates properties with Object.defineProperties", function() {
-			var O = defineObject({
-				properties : {
+			var O = defineObject()
+				.properties({
 					prop : {
 						value : 'value'
 					}
+				});
+
+			var o = O.create();
+			expect(o.prop).toEqual('value');
+		});
+
+		it("stacks the properties with multiple calls", function() {
+			var O = defineObject().properties({
+					prop : {
+						value : 'value'
+					}
+				}).properties({
+					prop2 : {
+						value : 'value'
+					}
+				});
+
+			var o = O.create();
+			expect(o.prop).toEqual('value');
+			expect(o.prop2).toEqual('value');
+		});
+
+		it("passes on the properties to the inherited object", function() {
+			var O = defineObject().properties({
+				prop : {
+					value : 'value'
+				}
+			});
+
+			var o = O.extend().create();
+			
+			expect(o.prop).toEqual('value');
+
+		});
+
+		it("does not affect parent constructor if new properties are added to the child", function() {
+			var O = defineObject().properties({
+				prop : {
+					value : 'value'
+				}
+			});
+
+			var E = O.extend().properties({
+				prop2 : {
+					value : 'value'
 				}
 			});
 
 			var o = O.create();
-			expect(o.prop).toEqual('value');
+			var e = E.create();
+
+			expect(o.prop2).toBe(undefined);
+			expect(e.prop2).toEqual('value');
+
 		});
 	});
 
@@ -118,68 +180,34 @@ describe("defineObject", function() {
 			var F = function() {};
 			F.prototype.prop = 'value';
 
-			var O = defineObject({
-				parent: F
+			var O = defineObject.extend(F,{
+				prop2 : 'value2'
 			});
 
 			var o = O.create();
 
 			expect(o.prop).toBe('value');
+			expect(o.prop2).toBe('value2');
 			expect(o instanceof F).toBe(true);
 		});
 
-		it("provides access to the parent", function() {
-	    	expect(B.parent).toBe(A);
+		it("provides access to the parent's init method", function() {
+	    	expect(B.__superinit__).toBe(A.init);
 	    });
 
 	    it("provides access to the parent's prototype", function() {
-	    	expect(B.parentProto).toBe(A.prototype);
-	    });
-
-	    it("throws an error if an incorrect object gets passed in as the parent", function() {
-	    	expect(function() { 
-	    		defineObject({ parent : {} }) 
-	    	}).toThrow();
+	    	expect(B.__super__).toBe(A.prototype);
 	    });
 	});
 
-	describe("when extending other objects", function() {
-		it("extends plain objects", function() {
-			var C = defineObject({
-				extend : { value : true }
-			});
-
-			var c = C.create();
-			expect(c.value).toBe(true);
-		});
-
-		it("extends the objects in order if an array is provided ", function() {
-			var o = function() {};
-			o.prototype.one = 0;
-			o.prototype.two = 2;
-
-			var C = defineObject({
-				extend : [o.prototype, { one: 1, three: 3 }]
-			});
-
-			var c = C.create();
-			expect(c.one).toBe(1);
-			expect(c.two).toBe(2);
-			expect(c.three).toBe(3);
-		});
-	});
 
 	describe("when mixing in other objects", function() {
 		it("extends the objects prototype with the mixed in objects", function() {
 			var M = defineObject({ 
-				prototype: {
-					value : true
-				}
+				value : true
 			});
 
-			var C = defineObject({
-				mixin : M
-			});
+			var C = defineObject().mixin(M);
 
 			var c = C.create();
 			expect(c.value).toBe(true);
@@ -192,70 +220,72 @@ describe("defineObject", function() {
 				}
 			});
 
-			var C = defineObject({
-				mixin : M
-			});
+			var C = defineObject().mixin(M);
 
 			var c = C.create();
 			expect(c.value).toBe(true);
 		});
 
-		it("mixes in the objects in order if an array is provided ", function() {
+		it("can mixin plain constructors", function() {
+			var M = function() {
+				this.value2 = true;
+			};
+
+			M.prototype.value = true;
+
+			var C = defineObject().mixin(M);
+			var c = C.create();
+
+			expect(c.value).toBe(true);
+			expect(c.value2).toBe(true);
+		});
+
+		it("can mixin with plain objects", function() {
+			var M = {
+				value: true
+			};
+
+			var C = defineObject().mixin(M);
+			var c = C.create();
+
+			expect(c.value).toBe(true);
+		});
+
+		it("passes along the mixin to the extended object", function() {
 			var M = defineObject({ 
-				prototype : {
-					one: 0,
-					two: 2
+				init : function() {
+					this.value = true;
+				}
+			});
+
+			var O = defineObject().mixin(M);
+			var o = O.extend().create();
+			
+			expect(o.value).toEqual(true);
+		});
+
+		it("does not affect parent constructor if new mixins are added to the child", function() {
+			var M = defineObject({ 
+				init : function() {
+					this.value = true;
 				}
 			});
 
 			var M2 = defineObject({ 
-				prototype : {
-					one : 1,
-					three: 3
-				}
-			});
-
-			var C = defineObject({
-				mixin : [M, M2]
-			});
-
-			var c = C.create();
-			expect(c.one).toBe(1);
-			expect(c.two).toBe(2);
-			expect(c.three).toBe(3);
-		});
-
-		it("calls the init method in order if an array is provided", function() {
-			var M = defineObject({ 
 				init : function() {
-					this.one = 0;
-					this.two = 2;
+					this.value2 = true;
 				}
 			});
 
-			var M2 = defineObject({ 
-				init : function() {
-					this.one = 1;
-					this.three = 3;
-				}
-			});
+			var O = defineObject().mixin(M);
 
-			var C = defineObject({
-				mixin : [M, M2]
-			});
+			var E = O.extend().mixin(M2);
 
-			var c = C.create();
-			expect(c.one).toBe(1);
-			expect(c.two).toBe(2);
-			expect(c.three).toBe(3);
+			var o = O.create();
+			var e = E.create();
+
+			expect(o.value2).toBe(undefined);
+			expect(e.value2).toEqual(true);
 		});
-
-		it("throws an error if an incorrect object gets passed in as the parent", function() {
-			expect(function() {
-				defineObject({
-					mixin : {}
-				})
-			}).toThrow();
-	    });
 	});
 });

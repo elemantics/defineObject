@@ -3,7 +3,7 @@
 
 // defineObject-js may be freely distributed under the MIT license
 
-(function () {
+;(function () {
     "use strict";
 
     var root = this;
@@ -14,89 +14,105 @@
         return new F();
     });
 
-    var isArray = ( Array.isArray || function(vArg) {
-        return Object.prototype.toString.call(vArg) === "[object Array]";
-    });
-
-    function extendObj(to,from) {
+    function extendObject(to,from) {
         for (var prop in from) { 
-            if (from.hasOwnProperty(prop)) {
+            if (from.hasOwnProperty(prop) && prop !== 'init') {
                 to[prop] = from[prop];
             }
         }
+
+        return to;
     }
 
-    function forceArray(data) {
-        return !data || isArray(data) ? data : [data];
+    function safeExtend(to,from) {
+        for (var prop in from) { 
+            if (from.hasOwnProperty(prop)) {
+                if (to.hasOwnProperty(prop)) {
+                    throw "defineObject : can't set static property " + prop + ", property already exists on object ";
+                }
+
+                to[prop] = from[prop];
+            }
+        }
+
+        return to;
     }
    
-    function defineObject(args) {
-        args = args || {};
+    function defineObject(args,staticArgs) {
+        var F = function() {
+            var i, l,
+                mixin = F._mixin,
+                properties = F._properties,
+                f = !this || this === root ? objectCreate(F.prototype) : this;
 
-        var i, l, F,
-            prototype = args.prototype,
-            properties = args.properties,
-            extend = forceArray(args.extend),
-            mixin = forceArray(args.mixin),
-            init = args.init || function() {},
-            parent = args.parent;
-
-        F = function() {
-            var f = !this || this === root ? objectCreate(F.prototype) : this;
-
-            if (F.properties) {
-                Object.defineProperties(f, F.properties);
+            if (properties) {
+                Object.defineProperties(f, properties);
             }
 
             F.init.apply(f,arguments);
 
-            if (F.mixin) {
-                for (i = 0, l = F.mixin.length; i < l; i++) {
-                    F.mixin[i].call(f);
+            if (mixin) {
+                for (i = 0, l = mixin.length; i < l; i++) {
+                    mixin[i].call(f);
                 }
             }
 
             return f;
         };
 
-        if (parent) {
-            F.prototype = objectCreate(parent.prototype);
-        }
-
-        if (extend) {
-            for (i=0,l=extend.length; i < l; i++) {
-                extendObj(F.prototype,  extend[i]);
+        F.init = (args && args.init) ? args.init : function() {};
+        F._mixin = null;
+        F._properties = null;
+        F.properties = function(props) {
+            F._properties || (F._properties = {});
+            extendObject(F._properties,props);
+            return F;
+        };
+        F.mixin = function(mixin) {
+            if (typeof mixin === 'function') {
+                F._mixin || (F._mixin = []);
+                extendObject(F.prototype, mixin.prototype);
+                F._mixin.push(mixin);
+            } else {
+                extendObject(F.prototype, mixin);
             }
-        }
 
-        if (mixin) {
-            for (i = 0, l = mixin.length; i < l; i++) {
-                if (typeof mixin[i] === 'function') {
-                    extendObj(F.prototype, mixin[i].prototype);
-                } else {
-                    throw "defineObject : not a valid mixin";
-                }
-            }
-        }
-
-        extendObj(F.prototype, prototype);
-
-        F.init = init;
-        F.mixin = mixin;
-        F.properties = properties;
+            return F;
+        },
+        F.methods = function(methods) {
+            if (methods.init) F.init = methods.init;
+            extendObject(F.prototype, methods);
+        },
+        F.statics = function(statics) {
+            safeExtend(F, statics);
+        },
         F.create = function() {
             var f = F.apply(root,arguments);
             return f;
         };
+        F.extend = function(args, staticArgs) {
+            return defineObject.extend(F,args, staticArgs);
+        };
 
-        if (parent) {
-            F.parent = parent;
-            F.parentProto = parent.prototype;
-        }
+
+        if (args) F.methods(args);
+        if (staticArgs) F.statics(staticArgs);
 
         return F;
 
     }
+
+    defineObject.extend = function(constructor, args, staticArgs) {
+            var E = defineObject(null,staticArgs);
+            E.prototype = objectCreate(constructor.prototype);
+            E.init = (args && args.init) ? args.init : function() {};
+            if (constructor._mixin) E._mixin = constructor._mixin.slice(0);
+            if (constructor._properties) E._properties = extendObject({},constructor._properties);
+            if (args) extendObject(E.prototype, args);
+            E.__super__ = constructor.prototype;
+            E.__superinit__ = constructor.init || constructor;
+            return E;
+    };
 
     if (typeof exports !== 'undefined') {
         module.exports = exports = defineObject;
