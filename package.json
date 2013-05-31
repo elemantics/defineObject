@@ -1,6 +1,6 @@
 {
   "name": "define-object",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "devDependencies": {
     "grunt": "~0.4.0",
     "grunt-cli": "~0.1.8",
