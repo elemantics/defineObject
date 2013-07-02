@@ -1,4 +1,4 @@
-// defineObject-js v1.0 
+// defineObject-js v1.1 
 // (c) 2013 Sergey Melnikov 
 
 // defineObject-js may be freely distributed under the MIT license
@@ -49,14 +49,14 @@
                 Object.defineProperties(f, properties);
             }
 
-            F.init.apply(f,arguments);
-
             if (mixin) {
                 for (i = 0, l = mixin.length; i < l; i++) {
                     mixin[i].call(f);
                 }
             }
 
+            F.init.apply(f,arguments);
+            
             return f;
         };
 
