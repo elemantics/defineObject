@@ -66,7 +66,7 @@ Usage
     }
   }).mixin(Logger);
 
-  var dog = new Dog(); //Alternatively 'new Dog(80)' or 'Dog(80)'
+  var dog = new Dog();
   dog.hello();
   dog.vocalize();
   dog.drool();
