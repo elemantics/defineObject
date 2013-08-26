@@ -1,4 +1,4 @@
-// defineObject-js v1.1 
+// defineObject-js v2.0 
 // (c) 2013 Sergey Melnikov 
 
 // defineObject-js may be freely distributed under the MIT license
@@ -14,103 +14,99 @@
         return new F();
     });
 
-    function extendObject(to,from) {
-        for (var prop in from) { 
-            if (from.hasOwnProperty(prop) && prop !== 'init') {
-                to[prop] = from[prop];
-            }
-        }
-
-        return to;
-    }
-
-    function safeExtend(to,from) {
+    function extend(to, from) {
         for (var prop in from) { 
             if (from.hasOwnProperty(prop)) {
-                if (to.hasOwnProperty(prop)) {
-                    throw "defineObject : can't set static property " + prop + ", property already exists on object ";
-                }
-
                 to[prop] = from[prop];
             }
         }
 
         return to;
     }
-   
-    function defineObject(args,staticArgs) {
+ 
+    function defineObject(methods,staticMethods) {
         var F = function() {
             var i, l,
-                mixin = F._mixin,
-                properties = F._properties,
-                f = !this || this === root ? objectCreate(F.prototype) : this;
+                mixin = this.constructor.__mixin__,
+                properties = this.constructor.__properties__;
 
             if (properties) {
-                Object.defineProperties(f, properties);
+                Object.defineProperties(this, properties);
             }
 
             if (mixin) {
                 for (i = 0, l = mixin.length; i < l; i++) {
-                    mixin[i].call(f);
+                    mixin[i].call(this);
                 }
             }
 
-            F.init.apply(f,arguments);
-            
-            return f;
+            this.__init__.apply(this, arguments);
         };
 
-        F.init = (args && args.init) ? args.init : function() {};
-        F._mixin = null;
-        F._properties = null;
-        F.properties = function(props) {
-            F._properties || (F._properties = {});
-            extendObject(F._properties,props);
-            return F;
-        };
-        F.mixin = function(mixin) {
-            if (typeof mixin === 'function') {
-                F._mixin || (F._mixin = []);
-                extendObject(F.prototype, mixin.prototype);
-                F._mixin.push(mixin);
-            } else {
-                extendObject(F.prototype, mixin);
-            }
+        extend(F, {
+            __mixin__ : null,
+            __properties__ : null,
+            properties : function(props) {
+                this.__properties__ || (this.__properties__ = {});
+                extend(this.__properties__,props);
+                return this;
+            },
 
-            return F;
-        },
-        F.methods = function(methods) {
-            if (methods.init) F.init = methods.init;
-            extendObject(F.prototype, methods);
-        },
-        F.statics = function(statics) {
-            safeExtend(F, statics);
-        },
-        F.create = function() {
-            var f = F.apply(root,arguments);
-            return f;
-        };
-        F.extend = function(args, staticArgs) {
-            return defineObject.extend(F,args, staticArgs);
-        };
+            mixin : function(mixin) {
+                var constructor = this.prototype.constructor,
+                    __init__ = this.prototype.__init__,
+                    __super__ = this.prototype.__super__;
 
+                if (typeof mixin === 'function') {
+                    this.__mixin__ || (this.__mixin__ = []);
+                    extend(this.prototype, mixin.prototype);
+                    if (typeof mixin.prototype.__init__ === 'function') this.__mixin__.push(mixin.prototype.__init__);
+                    else this.__mixin__.push(mixin);
+                } else {
+                    extend(this.prototype, mixin);
+                    if (typeof mixin.__init__ === 'function') {
+                        this.__mixin__ || (this.__mixin__ = []);
+                        this.__mixin__.push(mixin.__init__);
+                    }
 
-        if (args) F.methods(args);
-        if (staticArgs) F.statics(staticArgs);
+                }
+
+                this.prototype.constructor = constructor;
+                this.prototype.__init__ = __init__;
+                this.prototype.__super__ = __super__;
+
+                return this;
+            },
+            methods : function(methods) {
+                extend(this.prototype, methods);
+            },
+            statics : function(statics) {
+                extend(this, statics);
+            },
+            extend : function(methods, staticMethods) {
+                return defineObject.extend(this, methods, staticMethods);
+            }    
+        });
+
+        F.prototype.__init__ = function() {};
+        if (methods) F.methods(methods);
+        if (staticMethods) F.statics(staticMethods);
 
         return F;
 
     }
 
-    defineObject.extend = function(constructor, args, staticArgs) {
-            var E = defineObject(null,staticArgs);
+    defineObject.extend = function(constructor, methods, staticMethods) {
+            var E = defineObject(null,staticMethods);
             E.prototype = objectCreate(constructor.prototype);
-            E.init = (args && args.init) ? args.init : function() {};
-            if (constructor._mixin) E._mixin = constructor._mixin.slice(0);
-            if (constructor._properties) E._properties = extendObject({},constructor._properties);
-            if (args) extendObject(E.prototype, args);
+            E.prototype.constructor = E;
+            if (!E.prototype.__init__) {
+                E.prototype.__init__ = constructor;
+            }
             E.__super__ = constructor.prototype;
-            E.__superinit__ = constructor.init || constructor;
+            if (constructor.__mixin__) E.__mixin__ = constructor.__mixin__.slice(0);
+            if (constructor.__properties__) E.__properties__ = extend({},constructor.__properties__);
+            if (methods) extend(E.prototype, methods);
             return E;
     };
 

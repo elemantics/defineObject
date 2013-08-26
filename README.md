@@ -3,22 +3,12 @@ defineObject
 
 A bit of sugar for defining JavaScript Objects and their prototypes.
 
-Why
-------------
-
-* Just a tiny wrapper around creating JavaScript objects, does not try turn JavaScript into something it's not. (ie classes)
+* A small wrapper around creating JavaScript objects, does not try turn JavaScript into something it's not. (ie classes)
 * Define objects without having to deal with the awkward and verbose syntax found in ES3 & ES5.
-* Guarantees a side-effect free constructor for painless inheritance.
+* Painless inheritance, initialization and static methods of the parent class are automatically carried over to the child class.
+* After inheritance, the constructor property on the prototype correctly points to it's constructor, unlike common js inheritance patterns. 
 * Provides a simple mechanism for mixins.
 * What gets created is a plain javascript constructor
-* Avoids the 'new' keyword when create new object instances. [ES3]
-
-Why not?
-------------
-
-* Adds some overhead when defining new objects, although the cost is very minimal and most likely paid upfront.
-* Adds 1 extra function call overhead when instantiating new objects, should not be an issue for the vast majority of js applications. For games, the use of object pooling can make this a non-issue as well.
-* Yet another library ...
 
 Usage
 ----------
@@ -36,7 +26,7 @@ Usage
   var Animal = Base.extend({
     //a initialization method with side-effects
     //that luckily will not get called when the Animal object is extended from
-    init: function() {
+    __init__: function() {
       this.launchRockets();
     },
     sound: 'silence',
@@ -49,7 +39,7 @@ Usage
   //Create a logger method which will be used as a mixin in our example
   //any object, or constructor can be used as a mixin
   var Logger = Base.extend({
-    init: function() {
+    __init__: function() {
       this.logHistory = [];
     },
     log : function(msg) {
@@ -61,9 +51,9 @@ Usage
 
   //Define the Dog object extending from Animal while mixing in Logger.
   var Dog = Animal.extend({
-    init : function(weight) {
+    __init__ : function(weight) {
       this.weight = weight;
-      //Dog.__superinit__.call(this); -- if you need to have access to the Animal initialization method
+      //Dog.__super.__init__.call(this); -- if you need to have access to the Animal initialization method
     },
     sound : 'woof',
     vocalize : function() {
@@ -76,7 +66,7 @@ Usage
     }
   }).mixin(Logger);
 
-  var dog = Dog.create(80); //Alternatively 'new Dog(80)' or 'Dog(80)'
+  var dog = new Dog(); //Alternatively 'new Dog(80)' or 'Dog(80)'
   dog.hello();
   dog.vocalize();
   dog.drool();
@@ -84,6 +74,7 @@ Usage
 
   console.log( dog instanceof Dog ); //true
   console.log( dog instanceof Animal); //true
+  console.log( dog.constructor === Dog); //true
   console.log( dog instanceof Logger); //false 
   
 ```
@@ -102,9 +93,6 @@ var Plain = function() {
 Plain.prototype.bar = 'foo';
 
 var Ext = defineObject.extend(Plain, {
-    init : function() {
-      Ext.__superinit__.call(this);
-    },
     fizz: 'fuzz'
 }).mixin({'fud' : 'foo'});
 
@@ -114,6 +102,44 @@ console.log(obj instanceof Plain);
 console.log(obj.foo, obj.bar, obj.fizz, obj.fud);
 
 ```
+
+Mixins
+--------
+
+Mixins can take the form of either an object or a constructor.
+
+if an object is used the object properties are merged into the target prototype, if an __init__ method is defined
+than it will on instantiation.
+
+```javascript
+
+var O = defineObject()
+  .mixin({
+    __init__ : function() {
+      this.msg = "hello world!";
+    },
+    print : function() {
+      console.log(this.msg);
+    }
+  })
+  .mixin({
+    __init__ : function() {
+      this.value = "hello earth!";
+    },
+    show : function() {
+      console.log(this.value);
+    }
+  });
+
+var o = new O();
+
+o.print() //"hello world!";
+o.show() //"hello earth!";
+
+```
+
+If a constructor is passed into the mixin method, the __init__ method on the prototype will be used upon instantiation. 
+If an __init__ method does not exists, the constructor method itself will be used.
 
 Static Methods
 -------------------

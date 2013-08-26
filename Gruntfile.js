@@ -1,6 +1,6 @@
 module.exports = function(grunt) {
 
-  var license = '// defineObject-js v1.1 \n// (c) 2013 Sergey Melnikov \n\n// defineObject-js may be freely distributed under the MIT license\n\n\n';
+  var license = '// defineObject-js v2.0 \n// (c) 2013 Sergey Melnikov \n\n// defineObject-js may be freely distributed under the MIT license\n\n\n';
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
